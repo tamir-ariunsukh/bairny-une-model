@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Орон сууцны үнийг таамаглах модел</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+        button {
+            width: 100%;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .abstract-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .abstract-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: abstractEffect 3s linear infinite;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            background: rgba(76, 175, 80, 0.3);
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.7);
+        }
+
+        .abstract-text {
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: bold;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        /* Анимэйшн хөдлөл - abstract effect */
+        @keyframes abstractEffect {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+        }
+
+        /* Текстийн тодорхой байдлын өөрчлөлт */
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+
+        <h1>Орон сууцны үнийг таамаглах модел</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="year">Ашиглалтанд орсон он:</label>
+                <select name="year" id="year">
+                    <option value="">Сонгох</option>
+                    {% for year in unique_years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="floor">Барилгын давхар:</label>
+                <select name="floor" id="floor">
+                    <option value="">Сонгох</option>
+                    {% for floor in unique_floors %}
+                    <option value="{{ floor }}">{{ floor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="progress">Барилгын явц:</label>
+                <select name="progress" id="progress">
+                    <option value="">Сонгох</option>
+                    {% for progress in unique_progress %}
+                    <option value="{{ progress }}">{{ progress }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="garage">Гараж:</label>
+                <select name="garage" id="garage">
+                    <option value="">Сонгох</option>
+                    {% for garage in unique_garage %}
+                    <option value="{{ garage }}">{{ garage }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Байршил:</label>
+                <select name="location" id="location">
+                    <option value="">Сонгох</option>
+                    {% for location in unique_location %}
+                    <option value="{{ location }}">{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="balcony">Тагт:</label>
+                <select name="balcony" id="balcony">
+                    <option value="">Сонгох</option>
+                    {% for balcony in unique_balcony %}
+                    <option value="{{ balcony }}">{{ balcony }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="area">Талбай (тоо):</label>
+                <input type="number" name="area" id="area" placeholder="Талбай оруулна уу">
+            </div>
+
+            <div class="form-group">
+                <label for="payment">Төлбөрийн нөхцөл:</label>
+                <select name="payment" id="payment">
+                    <option value="">Сонгох</option>
+                    {% for payment in unique_payment %}
+                    <option value="{{ payment }}">{{ payment }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="door">Хаалга:</label>
+                <select name="door" id="door">
+                    <option value="">Сонгох</option>
+                    {% for door in unique_door %}
+                    <option value="{{ door }}">{{ door }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="num_floors">Хэдэн давхарт (тоо):</label>
+                <input type="number" name="num_floors" id="num_floors" placeholder="Давхарын тоо оруулна уу">
+            </div>
+
+            <div class="form-group">
+                <label for="window">Цонх:</label>
+                <select name="window" id="window">
+                    <option value="">Сонгох</option>
+                    {% for window in unique_window %}
+                    <option value="{{ window }}">{{ window }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="num_windows">Цонхны тоо:</label>
+                <input type="number" name="num_windows" id="num_windows" placeholder="Цонхны тоо оруулна уу">
+            </div>
+
+            <div class="form-group">
+                <label for="floor_type">Шал:</label>
+                <select name="floor_type" id="floor_type">
+                    <option value="">Сонгох</option>
+                    {% for floor_type in unique_floor_type %}
+                    <option value="{{ floor_type }}">{{ floor_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit">Таамаглах</button>
+        </form>
+
+        <div class="abstract-container" id="abstractEffect" style="display: none;">
+            <div class="abstract-background"></div>
+            <div class="abstract-text">AI ажиллаж байна...</div>
+        </div>
+        {% if predicted_price is not none %}
+        <div class="result" id="resultId" style="display: none;">
+            <h2>Таамагласан үнэ: {{ predicted_price }} төгрөг</h2>
+        </div>
+        {% endif %}
+    </div>
+</body>
+<script>
+    // Хэрэв хэрэглэгч "Таамаглах" товчийг дарвал AJAX хүсэлт илгээж, хариуг ашиглах
+    document.querySelector("form").addEventListener("submit", function (e) {
+
+
+        e.preventDefault(); // Prevent the default form submission
+        document.getElementById("abstractEffect").style.display = "flex";
+
+
+        const formData = new FormData(this); // Get form data
+        fetch('/predict', {
+            method: 'POST',
+            body: formData,
+        })
+            .then(response => response.json()) // Ensure the server returns JSON
+            .then(data => {
+                document.getElementById("resultId").style.display = "flex";
+                document.getElementById("abstractEffect").style.display = "none"; // Effect-ийг нуух
+
+
+                if (data.predicted_price) {
+                    // Update the result with the predicted price from the server
+                    document.querySelector(".result").innerHTML = `<h2>Таамагласан үнэ: ${data.predicted_price} төгрөг</h2>`;
+                } else {
+
+                    document.querySelector(".result").innerHTML = `<h2>Таамагласан үнэ олдсонгүй</h2>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById("resultId").style.display = "flex";
+                document.getElementById("abstractEffect").style.display = "none"; // Effect-ийг нуух
+
+                console.error('Error:', error);
+            });
+    });
+</script>
+
+</html>
