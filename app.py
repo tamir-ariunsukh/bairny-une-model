@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 app = Flask(__name__)
@@ -128,7 +128,7 @@ def predict():
     )
 
     # Train the Random Forest Regressor
-    model = RandomForestRegressor(random_state=42, n_estimators=100)
+    model = LinearRegression()
     model.fit(X_train, y_train)
 
     # Predict on the test set
