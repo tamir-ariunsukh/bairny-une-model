@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 app = Flask(__name__)
 
 # Load dataset
-file_path = "newTamirv5.csv"  # Update with your file path
+file_path = "uneguiData.csv"  # Update with your file path
 data = pd.read_csv(file_path)
 
 
@@ -95,7 +95,7 @@ def predict():
     num_windows = request.form.get("num_windows")
     selected_floor_type = request.form.get("floor_type")
 
-    file_path = "newTamirv5.csv"  # Update with your file path
+    file_path = "uneguiData.csv"  # Update with your file path
     data = pd.read_csv(file_path)
     # Data cleaning and preprocessing
     # Convert "Үнэ" column to numeric by removing commas
