@@ -14,7 +14,7 @@ except Exception as e:
     print(f"Arduino холболт амжилтгүй: {e}")
     arduino = None  # Arduino байхгүй тохиолдолд код үргэлжлэх боломжтой болгоно
 
-# === Урьдчилан сургагдсан AI загвар ачаалах ===
+# === best_eye_state_model module ачааллах ===
 try:
     eye_model = load_model("best_eye_state_model.keras")
     print("Загвар амжилттай ачаалагдлаа.")
