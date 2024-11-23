@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import mediapipe as mp
 
-# === best_eye_state_model module ачааллах ===
+# === Загвар ачаалах ===
 try:
     eye_model = load_model("best_eye_state_model.keras")
     print("Загвар амжилттай ачаалагдлаа.")
@@ -13,7 +13,33 @@ except Exception as e:
 # === Mediapipe-ийн тохиргоо ===
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, min_detection_confidence=0.5)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, min_detection_confidence=0.5)
+
+
+# === Нүдний төлөв шалгах функц ===
+def check_eye_status(frame, eye_coords):
+    try:
+        x_min = max(0, int(min([coord.x for coord in eye_coords]) * frame.shape[1]) - 5)
+        x_max = min(
+            frame.shape[1],
+            int(max([coord.x for coord in eye_coords]) * frame.shape[1]) + 5,
+        )
+        y_min = max(0, int(min([coord.y for coord in eye_coords]) * frame.shape[0]) - 5)
+        y_max = min(
+            frame.shape[0],
+            int(max([coord.y for coord in eye_coords]) * frame.shape[0]) + 5,
+        )
+
+        eye_region = frame[y_min:y_max, x_min:x_max]
+        gray_eye = cv2.cvtColor(eye_region, cv2.COLOR_BGR2GRAY)
+        resized_eye = cv2.resize(gray_eye, (64, 64))
+        input_eye = np.expand_dims(resized_eye, axis=(0, -1)) / 255.0
+        prediction = eye_model.predict(input_eye, verbose=0)[0][1]
+        return prediction > 0.5  # True бол "Eyes Open", False бол "Eyes Closed"
+    except Exception as e:
+        print(f"Нүдний төлөвийг шалгах алдаа: {e}")
+        return False
+
 
 # === Зураг унших ===
 image_path = "test.png"  # Шалгах зургийн зам
@@ -24,60 +50,47 @@ if frame is None:
 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 results = face_mesh.process(rgb_frame)
 
-
-# === Толгойн байрлалыг тооцоолох функц ===
-def calculate_head_position(landmarks):
-    nose_tip = landmarks[1]  # Хамрын үзүүр
-    chin = landmarks[152]  # Эрүүний үзүүр
-    left_cheek = landmarks[234]  # Зүүн хацар
-    right_cheek = landmarks[454]  # Баруун хацар
-
-    vertical_difference = abs(nose_tip.y - chin.y)
-    horizontal_difference = abs(left_cheek.x - right_cheek.x)
-
-    return vertical_difference, horizontal_difference
-
-
-# === Нүдний төлөв шалгах ===
-def check_eye_status(frame):
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    resized_frame = cv2.resize(gray_frame, (64, 64))  # Загварт тохируулах хэмжээ
-    input_frame = np.expand_dims(resized_frame, axis=(0, -1)) / 255.0
-    prediction = eye_model.predict(input_frame, verbose=0)[0][0]
-    return "Eyes Open" if prediction > 0.5 else "Eyes Closed"
-
-
 # === Илрүүлэлт хийх ===
 head_status = "Head Up (Awake)"
-eye_status = "Eyes Open"
+eye_status = "Unknown"
+status = "Unknown"
 
 if results.multi_face_landmarks:
     for face_landmarks in results.multi_face_landmarks:
         mp_drawing.draw_landmarks(
             frame,
             face_landmarks,
-            mp_face_mesh.FACEMESH_TESSELATION,  # Шаардлагатай атрибутыг энд оруулна
+            mp_face_mesh.FACEMESH_TESSELATION,
             mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1, circle_radius=1),
             mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=1, circle_radius=1),
         )
-        vertical_diff, horizontal_diff = calculate_head_position(
-            face_landmarks.landmark
-        )
-        if vertical_diff > 0.1:  # Толгой доош хазайсан
+        landmarks = face_landmarks.landmark
+
+        # Зүүн болон баруун нүдний координат
+        left_eye_coords = [landmarks[i] for i in [362, 385, 387, 263, 373, 380]]
+        right_eye_coords = [landmarks[i] for i in [33, 160, 158, 133, 153, 144]]
+
+        left_eye_open = check_eye_status(frame, left_eye_coords)
+        right_eye_open = check_eye_status(frame, right_eye_coords)
+
+        # Толгойн байрлалыг шалгах
+        nose_tip = landmarks[1]
+        chin = landmarks[152]
+        vertical_difference = abs(nose_tip.y - chin.y)
+        if vertical_difference < 0.1:
             head_status = "Head Down (Sleeping)"
-        elif horizontal_diff < 0.05:  # Толгой хажуу тийш хазайсан
-            head_status = "Head Tilted (Sleeping)"
-        break
+        else:
+            head_status = "Head Up (Awake)"
 
-eye_status = check_eye_status(frame)
+        # Нийт төлөв тодорхойлох
+        if left_eye_open or right_eye_open:
+            eye_status = "Eyes Open"
+            status = "Awake"
+        else:
+            eye_status = "Eyes Closed"
+            status = "Sleeping"
 
-# === Нийт төлөв тодорхойлох ===
-status = (
-    "Sleeping"
-    if head_status in ["Head Down (Sleeping)", "Head Tilted (Sleeping)"]
-    or eye_status == "Eyes Closed"
-    else "Awake"
-)
+        break  # Нэг нүүр илрүүлээд зогсоох
 
 # === Төлөв дэлгэц дээр харуулах ===
 cv2.putText(

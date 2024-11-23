@@ -74,7 +74,7 @@ while cap.isOpened():
             mp_drawing.draw_landmarks(
                 frame,
                 face_landmarks,
-                mp_face_mesh.FACE_CONNECTIONS,
+                mp_face_mesh.FACEMESH_TESSELATION,
                 mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1, circle_radius=1),
                 mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=1, circle_radius=1),
             )
