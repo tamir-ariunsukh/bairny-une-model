@@ -83,7 +83,7 @@ early_stop = EarlyStopping(
     monitor="val_loss", patience=5, restore_best_weights=True, verbose=1
 )
 model_checkpoint = ModelCheckpoint(
-    "best_eye_state_model.keras", save_best_only=True, monitor="val_loss", verbose=1
+    "bbest_eye_state_model.keras", save_best_only=True, monitor="val_loss", verbose=1
 )
 
 # === 3. Сургалт ===
@@ -114,4 +114,4 @@ plt.title("Нарийвчлал")
 
 plt.show()
 
-print("Модел хадгалагдсан: 'best_eye_state_model.keras'")
+print("Модел хадгалагдсан: 'bbest_eye_state_model.keras'")
