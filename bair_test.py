@@ -1,5 +1,8 @@
 # Import libraries
 import pandas as pd
+import numpy as np  # Add this line
+
+import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -12,15 +15,18 @@ data = pd.read_csv(file_path)
 # Convert "Үнэ" column to numeric by removing commas
 data["Үнэ"] = data["Үнэ"].str.replace(",", "").astype(int)
 
+# Add new features based on rules
+data["Тагтны тоо"] = data["Тагт"].str.extract(r"(\d+)").fillna(0).astype(int)
+data["9-өөс доош давхар"] = (data["Барилгын давхар"] <= 9).astype(int)
+
 # Drop unnecessary columns
-data_cleaned = data.drop(columns=["ID", "Огноо"])
+data_cleaned = data.drop(columns=["ID", "Огноо", "Тагт"])
 
 # Encode categorical variables into numerical values
 categorical_columns = [
     "Байршил",
     "Барилгын явц",
     "Гараж",
-    "Тагт",
     "Төлбөрийн нөхцөл",
     "Хаалга",
     "Цонх",
@@ -56,6 +62,49 @@ print(f"Mean Squared Error (MSE): {mse}")
 print(f"Root Mean Squared Error (RMSE): {rmse}")
 
 
+# Function to check coefficients of the model
+def check_location_coefficients(model, X_train):
+    coefficients = pd.DataFrame(
+        {"Feature": X_train.columns, "Coefficient": model.coef_}
+    ).sort_values(by="Coefficient", ascending=False)
+    print("\n--- Feature Coefficients ---")
+    print(coefficients)
+
+
+# Function to check location significance
+def check_location_significance(X, y):
+    # Ensure all data is numeric
+    non_numeric_columns = X.select_dtypes(exclude=[np.number]).columns
+    if len(non_numeric_columns) > 0:
+        print("Non-numeric columns found:", non_numeric_columns)
+        X = pd.get_dummies(X, drop_first=True)
+        print("Converted non-numeric columns to numeric using get_dummies.")
+
+    if not np.issubdtype(y.dtype, np.number):
+        y = pd.to_numeric(y, errors="coerce")
+        print("Converted y to numeric.")
+
+    # Ensure all data is correctly converted to numpy arrays
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Add constant for intercept
+    X_with_constant = sm.add_constant(X)
+
+    # Fit OLS model
+    stats_model = sm.OLS(y, X_with_constant).fit()
+
+    print("\n--- Статистик шинжилгээний дүн ---")
+    print(stats_model.summary())  # Display full results
+
+
+# Check coefficients
+check_location_coefficients(model, X_train)
+
+# Check significance
+check_location_significance(X_train, y_train)
+
+
 # Function to align new data to match training data structure
 def align_features(new_data, reference_data):
     """
@@ -82,7 +131,8 @@ new_data = pd.DataFrame(
         "Цонхны тоо": [4],
         "Барилгын явц": ["Ашиглалтад орсон"],
         "Гараж": ["Байхгүй"],
-        "Тагт": ["2 тагттай"],
+        "Тагтны тоо": [2],
+        "9-өөс доош давхар": [1],
         "Төлбөрийн нөхцөл": ["Лизинггүй"],
         "Хаалга": ["Төмөр"],
         "Цонх": ["Мод"],
@@ -97,13 +147,13 @@ new_data_encoded = pd.get_dummies(
         "Байршил",
         "Барилгын явц",
         "Гараж",
-        "Тагт",
         "Төлбөрийн нөхцөл",
         "Хаалга",
         "Цонх",
         "Шал",
     ],
 )
+
 
 # Align new data to match training data structure
 new_data_aligned = align_features(new_data_encoded, X)
