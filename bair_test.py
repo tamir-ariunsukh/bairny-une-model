@@ -6,6 +6,8 @@ import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+import matplotlib.pyplot as plt  # For plotting graphs
+import openpyxl  # To handle Excel files
 
 # Load dataset
 file_path = "uneguiData.csv"  # Update with your file path
@@ -139,8 +141,8 @@ new_data = pd.DataFrame(
         "Шал": ["Паркет"],
     }
 )
-
-# Encode new data
+new_data_file = "new_data.xlsx"  # Replace with your file path
+new_data = pd.read_excel(new_data_file)
 new_data_encoded = pd.get_dummies(
     new_data,
     columns=[
@@ -153,11 +155,83 @@ new_data_encoded = pd.get_dummies(
         "Шал",
     ],
 )
-
-
-# Align new data to match training data structure
 new_data_aligned = align_features(new_data_encoded, X)
 
-# Predict the price
-predicted_price = model.predict(new_data_aligned)
-print(f"Predicted Price: {predicted_price[0]}")
+# Predict the price for new data
+predicted_prices = model.predict(new_data_aligned)
+
+# Add predicted prices to the new_data dataframe
+new_data["Таамагласан үнэ"] = predicted_prices
+
+
+# Plot actual vs predicted prices
+def plot_actual_vs_predicted_prices(new_data):
+    plt.figure(figsize=(12, 8))
+
+    # Convert prices to millions for easier display
+    new_data["Үнэ (сая)"] = new_data["Үнэ"] / 1_000_000
+    new_data["Таамагласан үнэ (сая)"] = new_data["Таамагласан үнэ"] / 1_000_000
+
+    # Plot actual prices
+    plt.plot(
+        new_data.index,
+        new_data["Үнэ (сая)"],
+        label="Зарын үнэ (сая төгрөг)",
+        marker="o",
+        linestyle="-",
+        color="blue",
+        linewidth=2,
+        alpha=0.8,
+    )
+
+    # Plot predicted prices
+    plt.plot(
+        new_data.index,
+        new_data["Таамагласан үнэ (сая)"],
+        label="Таамагласан үнэ (сая төгрөг)",
+        marker="x",
+        linestyle="--",
+        color="red",
+        linewidth=2,
+        alpha=0.8,
+    )
+
+    # Highlight differences for some points (add annotations)
+    for i in range(0, len(new_data), max(1, len(new_data) // 10)):
+        plt.annotate(
+            f"{new_data['Үнэ (сая)'].iloc[i]:.1f}M\n{new_data['Таамагласан үнэ (сая)'].iloc[i]:.1f}M",
+            (new_data.index[i], new_data["Үнэ (сая)"].iloc[i]),
+            textcoords="offset points",
+            xytext=(10, 10),
+            ha="center",
+            fontsize=9,
+            arrowprops=dict(facecolor="gray", arrowstyle="->", alpha=0.5),
+        )
+
+    # Styling
+    plt.title(
+        "Зарын үнэ ба Таамагласан үнэ",
+        fontsize=16,
+        fontweight="bold",
+    )
+    plt.xlabel("Орон сууцны үнэ тооцоолох модел", fontsize=14)
+    plt.ylabel("Үнэ (сая төгрөг)", fontsize=14)
+    plt.legend(fontsize=12, loc="upper left")
+    plt.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.7)
+
+    # Customize ticks
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
+    # Show plot
+    plt.tight_layout()
+    plt.show()
+
+
+# Call the function
+plot_actual_vs_predicted_prices(new_data)
+
+
+# Save updated dataframe to a new Excel file
+new_data.to_excel("new_data_with_predictions.xlsx", index=False)
+print("New data with predictions saved to 'new_data_with_predictions.xlsx'")
